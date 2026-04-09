@@ -43,7 +43,7 @@ docker run -d \
 
 | Variable        | Description                     | Default |
 | --------------- | ------------------------------- | ------- |
-| NFS_VERSION     | NFS version (3, 4, 4.1, 4.2)    | 4.1     |
+| NFS_VERSION     | NFS version (3, 4, 4.1, 4.2)    | 4       |
 | NFS_MOUNT_POINT | Mount location inside container | /data   |
 | DEBUG           | Enable logging to stdout        | false   |
 
