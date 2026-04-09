@@ -15,8 +15,7 @@ This container solves that by acting as a bridge:
 
 *Synology → rsync → container → NFS*
 
-
-More details: 
+More details:
 
 ## Features
 
@@ -69,6 +68,7 @@ Module: data
 
 - Requires privileged mode for NFS mounting
 - In my testing mounting as NFS 4 works when running on Synology, NFS 4.1 does not work.
+- It currently has no authentication added. Not for the rsync front end, or for the NFS mount. My setup doesn't require it, but I might add it in a later version if there is a need for it.
 
 ## License
 
