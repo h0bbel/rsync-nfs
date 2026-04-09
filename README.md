@@ -55,20 +55,20 @@ docker logs -f rsync-nfs
 
 ## Synology Setup
 
-The container can run on Synology directly, just ensure that you change the external port to something else than port 873 as this is in use already. I've used port 8073 in my testing.
+The container can run on Synology directly, just ensure that you change the external port to something else than port 873 as this is in use already. I've used port 8073 in my setup. Hyper Backup also requires that you put in a username in the job settings, but this information is disregarded by the container.
 
-### In Hyper Backup
+### Notes
 
-Choose rsync-compatible server
-Server: Docker host IP
-Port: 873 or other port configured during container setup.
-Module: data
-
-#### Notes
-
-- Requires privileged mode for NFS mounting
+- **Requires privileged mode for NFS mounting**
 - In my testing mounting as NFS 4 works when running on Synology, NFS 4.1 does not work.
 - It currently has no authentication added. Not for the rsync front end, or for the NFS mount. My setup doesn't require it, but I might add it in a later version if there is a need for it.
+
+### Hyper Backup
+
+- Choose rsync-compatible server
+- Server: Container IP
+- Port: 873 or other port configured during container setup.
+- Module: data (this is the NFS mount point in the container)
 
 ## License
 
