@@ -5,6 +5,8 @@ on:
     branches: [ "main" ]
     tags: [ "v*" ]
 
+  workflow_dispatch:
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -17,15 +19,21 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # 🔐 Login to GHCR
+      # 🔐 Log in to GHCR
       - name: Log in to GHCR
-        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io \
+            -u ${{ github.actor }} \
+            --password-stdin
 
-      # 🔐 Login to Docker Hub
+      # 🔐 Log in to Docker Hub
       - name: Log in to Docker Hub
-        run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
+        run: |
+          echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login \
+            -u "${{ secrets.DOCKERHUB_USERNAME }}" \
+            --password-stdin
 
-      # 🏷️ Build tags
+      # 🏷️ Build metadata (tags)
       - name: Extract metadata
         id: meta
         run: |
@@ -34,6 +42,7 @@ jobs:
 
           if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
             VERSION=${GITHUB_REF#refs/tags/}
+
             TAGS="$GHCR_IMAGE:latest,$GHCR_IMAGE:$VERSION,$DH_IMAGE:latest,$DH_IMAGE:$VERSION"
           else
             TAGS="$GHCR_IMAGE:latest,$DH_IMAGE:latest"
@@ -41,20 +50,20 @@ jobs:
 
           echo "tags=$TAGS" >> $GITHUB_OUTPUT
 
-      # 🏗️ Build
+      # 🏗️ Build image
       - name: Build image
         run: docker build -t rsync-nfs .
 
-      # 🏷️ Tag images
+      # 🏷️ Apply tags
       - name: Tag image
         run: |
           for tag in $(echo "${{ steps.meta.outputs.tags }}" | tr ',' ' '); do
-            docker tag rsync-nfs $tag
+            docker tag rsync-nfs "$tag"
           done
 
-      # 🚀 Push images
-      - name: Push images
+      # 🚀 Push image(s)
+      - name: Push image
         run: |
           for tag in $(echo "${{ steps.meta.outputs.tags }}" | tr ',' ' '); do
-            docker push $tag
+            docker push "$tag"
           done
