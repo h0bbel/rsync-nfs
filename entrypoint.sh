@@ -80,7 +80,7 @@ if is_debug; then
 uid = nobody
 gid = nobody
 use chroot = no
-max connections = 10
+#max connections = 10
 
 pid file = /var/run/rsyncd.pid
 log file = /dev/stdout

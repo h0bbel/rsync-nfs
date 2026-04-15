@@ -17,33 +17,43 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # 🔐 Login to GHCR
       - name: Log in to GHCR
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
+      # 🔐 Login to Docker Hub
+      - name: Log in to Docker Hub
+        run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
+
+      # 🏷️ Build tags
       - name: Extract metadata
         id: meta
         run: |
-          IMAGE=ghcr.io/${{ github.repository }}
+          GHCR_IMAGE=ghcr.io/${{ github.repository }}
+          DH_IMAGE=${{ secrets.DOCKERHUB_USERNAME }}/rsync-nfs
 
           if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
             VERSION=${GITHUB_REF#refs/tags/}
-            TAGS="$IMAGE:latest,$IMAGE:$VERSION"
+            TAGS="$GHCR_IMAGE:latest,$GHCR_IMAGE:$VERSION,$DH_IMAGE:latest,$DH_IMAGE:$VERSION"
           else
-            TAGS="$IMAGE:latest"
+            TAGS="$GHCR_IMAGE:latest,$DH_IMAGE:latest"
           fi
 
           echo "tags=$TAGS" >> $GITHUB_OUTPUT
 
+      # 🏗️ Build
       - name: Build image
         run: docker build -t rsync-nfs .
 
+      # 🏷️ Tag images
       - name: Tag image
         run: |
           for tag in $(echo "${{ steps.meta.outputs.tags }}" | tr ',' ' '); do
             docker tag rsync-nfs $tag
           done
 
-      - name: Push image
+      # 🚀 Push images
+      - name: Push images
         run: |
           for tag in $(echo "${{ steps.meta.outputs.tags }}" | tr ',' ' '); do
             docker push $tag
