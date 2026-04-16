@@ -34,7 +34,7 @@ docker run -d \
   --name rsync-nfs \
   --privileged \
   -p 873:873 \
-  -e NFS_SERVER=10.111.1.101 \
+  -e NFS_SERVER=10.111.1.10 \
   -e NFS_PATH=/export/data \
   rsync-nfs
 ```
