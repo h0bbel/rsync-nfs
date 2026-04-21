@@ -22,7 +22,7 @@ DLOG() {
 
 LOG "Starting rsync-nfs entrypoint"
 
-# Dump env only in debug mode (avoids leaking secrets normally)
+# Dump env only in debug mode
 if is_debug; then
   LOG "Environment variables:"
   env | sort | sed 's/^/  /'
@@ -46,7 +46,7 @@ LOG "  DEBUG=$DEBUG"
 LOG "Creating mount point..."
 mkdir -p "$NFS_MOUNT_POINT"
 
-# Build mount options (Synology-safe defaults)
+# Mount NFS
 MOUNT_OPTS="vers=${NFS_VERSION},proto=tcp,rsize=1048576,wsize=1048576,noatime,nodiratime"
 
 LOG "Mounting NFS with options: $MOUNT_OPTS"
@@ -60,7 +60,7 @@ else
   exit 1
 fi
 
-# Verify mount
+# Verify mount (debug only)
 DLOG "Verifying mount table:"
 DLOG "$(mount | grep "$NFS_MOUNT_POINT" || echo 'Mount not found')"
 
@@ -70,20 +70,22 @@ if is_debug; then
   ls -la "$NFS_MOUNT_POINT" || LOG "WARNING: Cannot list directory"
 fi
 
-# Generate rsync config dynamically
+# Generate rsync config
 RSYNC_CONF="/tmp/rsyncd.conf"
 
-if is_debug; then
-  LOG "Generating rsync config (debug mode)"
+LOG "Generating rsync config"
 
-  cat > "$RSYNC_CONF" <<EOF
+cat > "$RSYNC_CONF" <<EOF
 uid = nobody
 gid = nobody
 use chroot = no
 
 pid file = /var/run/rsyncd.pid
+
+# ALWAYS log to stdout
 log file = /dev/stdout
 
+# ALWAYS log connections + transfers
 transfer logging = yes
 log format = %t [%p] %h %o %f %l %b
 
@@ -93,19 +95,11 @@ log format = %t [%p] %h %o %f %l %b
     list = yes
 EOF
 
+# Debug adds verbosity only
+if is_debug; then
   RSYNC_FLAGS="--verbose"
+  LOG "Debug mode enabled: verbose rsync logging"
 else
-  cat > "$RSYNC_CONF" <<EOF
-uid = nobody
-gid = nobody
-use chroot = no
-
-[data]
-    path = $NFS_MOUNT_POINT
-    read only = no
-    list = yes
-EOF
-
   RSYNC_FLAGS=""
 fi
 
